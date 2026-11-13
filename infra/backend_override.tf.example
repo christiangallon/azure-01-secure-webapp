@@ -1,0 +1,8 @@
+# Rename to backend_override.tf (git-ignored) to use LOCAL state, e.g. in a
+# short-lived KodeKloud session where you cannot create the state storage account.
+# Local state contains secrets in plain text: never commit terraform.tfstate.
+terraform {
+  backend "local" {
+    path = "terraform.tfstate"
+  }
+}

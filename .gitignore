@@ -1,0 +1,26 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+.env
+.pytest_cache/
+app.zip
+
+# Terraform: never commit state, plans or local overrides (they can contain secrets)
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+*.tfplan
+tfplan
+plan.txt
+crash.log
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+*.auto.tfvars
+secrets.tfvars
+
+# Misc
+publish.xml
+checkov-results/

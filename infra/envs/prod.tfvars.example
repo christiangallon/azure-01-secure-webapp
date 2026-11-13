@@ -1,0 +1,26 @@
+# Example production settings (not deployed in this project).
+environment = "prod"
+
+use_existing_resource_group = false
+resource_group_name         = "rg-secwebapp-prod"
+location                    = "eastus"
+
+app_service_sku = "P1v3"
+
+enable_entra_auth       = true
+enable_role_assignments = true
+create_kv_secret        = false # prod: secret value set out of band, never in state
+enable_alerts           = true
+enable_cpu_alert        = true
+
+kv_purge_protection_enabled   = true
+kv_soft_delete_retention_days = 90
+
+# Entra group (you + pipeline SP) as SQL admin instead of a single identity.
+sql_admin_login     = "sg-sql-admins-secwebapp"
+sql_admin_object_id = "<group-object-id>"
+
+sql_db_sku                   = "GP_S_Gen5_2"
+sql_auto_pause_delay_minutes = -1
+
+log_retention_days = 90
