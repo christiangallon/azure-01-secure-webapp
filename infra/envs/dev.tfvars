@@ -12,9 +12,10 @@ resource_group_name         = "<kodekloud-resource-group>" # az group list -o ta
 app_service_sku = "B1"
 
 # Toggles: switch off what the sandbox blocks (see docs/sandbox-constraints.md).
-enable_entra_auth       = true # false if you cannot create app registrations
-enable_role_assignments = true # false if roleAssignments/write is denied
-create_kv_secret        = true # false if you have no data-plane role on the vault
+enable_entra_auth       = true  # false if you cannot create app registrations
+enable_role_assignments = true  # false if roleAssignments/write is denied
+kv_use_access_policies  = false # true with enable_role_assignments = false: Key Vault works without RBAC writes
+create_kv_secret        = true  # false if you have no data-plane role on the vault
 enable_alerts           = true
 enable_cpu_alert        = false
 

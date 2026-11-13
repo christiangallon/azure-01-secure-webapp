@@ -17,6 +17,7 @@
 # "FROM EXTERNAL PROVIDER" then needs the SQL server identity to have Directory
 # Readers, which a sandbox normally cannot grant.
 set -euo pipefail
+export MSYS_NO_PATHCONV=1 # Git Bash on Windows: stop /subscriptions/... IDs being rewritten as file paths
 
 tf_out() { terraform output -raw "$1" 2>/dev/null || true; }
 SQL_SERVER="${SQL_SERVER:-$(tf_out sql_server_fqdn)}"

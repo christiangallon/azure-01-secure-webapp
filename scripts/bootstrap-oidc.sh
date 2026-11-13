@@ -8,6 +8,7 @@
 # role assignments. If a step fails, the pipeline stays "unexecuted"; keep the
 # workflows in the repo and deploy from your PC with `terraform apply` instead.
 set -euo pipefail
+export MSYS_NO_PATHCONV=1 # Git Bash on Windows: stop /subscriptions/... IDs being rewritten as file paths
 
 : "${RG:?Set RG to the resource group name}"
 : "${GH_REPO:?Set GH_REPO to owner/repo}"

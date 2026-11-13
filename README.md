@@ -98,6 +98,8 @@ scripts/
 
 ## Run it locally (Git Bash on Windows)
 
+> Git Bash rewrites arguments that start with `/` (such as `/subscriptions/...` resource IDs) into Windows paths, which makes `az` fail with `MissingSubscription`. Run `export MSYS_NO_PATHCONV=1` in each new terminal. The scripts in `scripts/` already set it.
+
 Prerequisites: Terraform >= 1.6 (`winget install Hashicorp.Terraform`), Azure CLI, go-sqlcmd (`winget install sqlcmd`). Optional: tflint, Checkov (`pip install checkov`).
 
 ```bash
@@ -147,6 +149,7 @@ LOCAL_DEV=1 pytest -q
 | Cannot create resource groups | `use_existing_resource_group = true` (default) | RG is read with a data source; Terraform never creates or deletes it |
 | Cannot create app registrations | `enable_entra_auth = false` | no `azuread_*` resources, no `auth_settings_v2`; test role logic with pytest |
 | Cannot create role assignments | `enable_role_assignments = false` | Key Vault RBAC assignments skipped. Also set `create_kv_secret = false` unless you already have a data-plane role. `API_KEY` then shows as an unresolved reference |
+| Cannot create role assignments, but want Key Vault to work | `enable_role_assignments = false` + `kv_use_access_policies = true` | Vault switches to access-policy mode (needs only Contributor). Deployer gets secret Get/List/Set/Delete/Recover/Purge, web app identity gets Get/List. Document as a sandbox deviation: RBAC is the production choice |
 | No data-plane role on the vault | `create_kv_secret = false` | vault is created, secret is set by someone who has the role |
 | Alerts/action groups blocked | `enable_alerts = false` | no monitor alert resources |
 | Free tier only | `app_service_sku = "F1"` | `always_on` turns off automatically |

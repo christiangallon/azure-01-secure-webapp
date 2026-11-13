@@ -9,6 +9,7 @@
 # disabled (Entra auth only, so no storage key exists to leak), blob versioning
 # + soft delete so a corrupted/deleted state can be recovered.
 set -euo pipefail
+export MSYS_NO_PATHCONV=1 # Git Bash on Windows: stop /subscriptions/... IDs being rewritten as file paths
 
 : "${RG:?Set RG to the resource group name}"
 LOC="${LOC:-$(az group show -n "$RG" --query location -o tsv)}"

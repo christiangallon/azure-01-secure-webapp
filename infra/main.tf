@@ -87,6 +87,7 @@ module "keyvault" {
   soft_delete_retention_days    = var.kv_soft_delete_retention_days
   public_network_access_enabled = var.kv_public_network_access_enabled
   enable_role_assignments       = var.enable_role_assignments
+  use_access_policies           = var.kv_use_access_policies
   secrets_officer_object_ids    = distinct(concat([local.deployer_object_id], var.kv_secrets_officer_object_ids))
   create_secret                 = var.create_kv_secret
   api_key                       = var.api_key
@@ -136,10 +137,20 @@ module "appservice" {
 
 module "rbac" {
   source = "./modules/rbac"
-  count  = var.enable_role_assignments ? 1 : 0
+  count  = var.enable_role_assignments && !var.kv_use_access_policies ? 1 : 0
 
   key_vault_id         = module.keyvault.id
   web_app_principal_id = module.appservice.principal_id
+}
+
+# Access-policy fallback for the web app identity: read secrets in this vault only.
+resource "azurerm_key_vault_access_policy" "webapp" {
+  count = var.kv_use_access_policies ? 1 : 0
+
+  key_vault_id       = module.keyvault.id
+  tenant_id          = local.tenant_id
+  object_id          = module.appservice.principal_id
+  secret_permissions = ["Get", "List"]
 }
 
 module "alerts" {

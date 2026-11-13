@@ -80,6 +80,12 @@ variable "enable_role_assignments" {
   default     = true
 }
 
+variable "kv_use_access_policies" {
+  description = "Use Key Vault access policies instead of Azure RBAC. Fallback for sandboxes that deny Microsoft.Authorization/roleAssignments/write (needs only Contributor). RBAC remains the recommended production mode."
+  type        = bool
+  default     = false
+}
+
 variable "enable_alerts" {
   description = "Create the action group and metric alerts."
   type        = bool

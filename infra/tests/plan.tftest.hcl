@@ -97,3 +97,17 @@ run "invalid_environment_rejected" {
 
   expect_failures = [var.environment]
 }
+
+run "kv_access_policy_fallback" {
+  command = plan
+
+  variables {
+    enable_role_assignments = false
+    kv_use_access_policies  = true
+  }
+
+  assert {
+    condition     = length(module.rbac) == 0 && length(azurerm_key_vault_access_policy.webapp) == 1
+    error_message = "Access-policy fallback must replace the RBAC role assignment for the web app."
+  }
+}

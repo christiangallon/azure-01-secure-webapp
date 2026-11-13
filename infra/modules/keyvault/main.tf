@@ -6,6 +6,7 @@ variable "purge_protection_enabled" { type = bool }
 variable "soft_delete_retention_days" { type = number }
 variable "public_network_access_enabled" { type = bool }
 variable "enable_role_assignments" { type = bool }
+variable "use_access_policies" { type = bool }
 variable "secrets_officer_object_ids" { type = list(string) }
 variable "create_secret" { type = bool }
 
@@ -35,7 +36,7 @@ resource "azurerm_key_vault" "this" {
   location                      = var.location
   tenant_id                     = var.tenant_id
   sku_name                      = "standard"
-  rbac_authorization_enabled    = true # RBAC mode, no access policies
+  rbac_authorization_enabled    = !var.use_access_policies # RBAC mode by default; access policies only as a sandbox fallback
   purge_protection_enabled      = var.purge_protection_enabled
   soft_delete_retention_days    = var.soft_delete_retention_days
   public_network_access_enabled = var.public_network_access_enabled
@@ -50,16 +51,27 @@ resource "azurerm_key_vault" "this" {
 # Data-plane write access for the deployer (and optional extra admins), scoped
 # to this vault only. Secrets Officer can manage secrets but not keys/certs or RBAC.
 resource "azurerm_role_assignment" "secrets_officer" {
-  for_each = var.enable_role_assignments ? toset(var.secrets_officer_object_ids) : toset([])
+  for_each = var.enable_role_assignments && !var.use_access_policies ? toset(var.secrets_officer_object_ids) : toset([])
 
   scope                = azurerm_key_vault.this.id
   role_definition_name = "Key Vault Secrets Officer"
   principal_id         = each.value
 }
 
+# Fallback when role assignments are denied: equivalent secret-only permissions
+# via access policies (Purge/Recover so terraform destroy can purge the vault).
+resource "azurerm_key_vault_access_policy" "secrets_officer" {
+  for_each = var.use_access_policies ? toset(var.secrets_officer_object_ids) : toset([])
+
+  key_vault_id       = azurerm_key_vault.this.id
+  tenant_id          = var.tenant_id
+  object_id          = each.value
+  secret_permissions = ["Get", "List", "Set", "Delete", "Recover", "Purge"]
+}
+
 # RBAC propagation can take a minute or two; writing the secret immediately fails with 403.
 resource "time_sleep" "rbac_propagation" {
-  count           = var.enable_role_assignments && var.create_secret ? 1 : 0
+  count           = var.enable_role_assignments && !var.use_access_policies && var.create_secret ? 1 : 0
   create_duration = "90s"
   depends_on      = [azurerm_role_assignment.secrets_officer]
 }
@@ -82,7 +94,7 @@ resource "azurerm_key_vault_secret" "api_key" {
   content_type = "text/plain"
   tags         = var.tags
 
-  depends_on = [time_sleep.rbac_propagation]
+  depends_on = [time_sleep.rbac_propagation, azurerm_key_vault_access_policy.secrets_officer]
 }
 
 resource "azurerm_monitor_diagnostic_setting" "kv" {
